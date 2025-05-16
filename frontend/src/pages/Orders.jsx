@@ -1,20 +1,24 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import React, { useContext, useEffect, useState } from 'react';
+import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
 import axios from 'axios';
 
 const Orders = () => {
-
-  const { backendUrl, token , currency} = useContext(ShopContext);
-  const [orderData,setorderData] = useState([])
+  const { backendUrl, token, currency } = useContext(ShopContext);
+  const [orderData, setorderData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const loadOrderData = async () => {
     try {
+      setLoading(true);
       if (!token) return;
 
-      const response = await axios.post(backendUrl + '/api/order/userorders', {}, { headers: { token } });
+      const response = await axios.post(backendUrl + '/api/order/userorders', {}, {
+        headers: { token }
+      });
+
       if (response.data.success) {
-        let allOrdersItem = []
+        let allOrdersItem = [];
         response.data.orders.forEach((order) => {
           order.items.forEach((item) => {
             item['status'] = order.status;
@@ -28,8 +32,10 @@ const Orders = () => {
       }
     } catch (error) {
       console.error("Failed to fetch orders", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     loadOrderData();
@@ -37,13 +43,19 @@ const Orders = () => {
 
   return (
     <div className='border-t pt-16'>
-
       <div className='text-2xl mb-8'>
         <Title text1={'ORDER'} text2={'HISTORY'} />
       </div>
 
       <div className='space-y-6'>
-        {
+        {loading ? (
+          <div className="flex justify-center items-center h-40">
+            <svg className="animate-spin h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+        ) : (
           orderData.map((item, index) => (
             <div key={index} className='py-5 border rounded-lg px-4 flex flex-col md:flex-row md:justify-between md:items-center gap-6 bg-gray-50 hover:shadow-md transition'>
               <div className='flex items-start gap-5 text-sm'>
@@ -70,10 +82,10 @@ const Orders = () => {
               </div>
             </div>
           ))
-        }
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Orders
+export default Orders;
